@@ -1,0 +1,26 @@
+<resources>
+    <!-- Main Activity -->
+    <string name="app_name">AnimeWatchList</string>
+    <string name="searchText">Search</string>
+    <string name="searchAction">"\>"</string>
+    <string name="searchCriteria">Criteria</string>
+    <string name="radioAll">All</string>
+    <string name="radioWatchlist">Watchlist</string>
+    <string name="radioCompleted">Completed</string>
+    <string name="emptyResult">No result found</string>
+    <string name="min3Char">Note: string inputs must have at least 3 characters</string>
+
+    <string name="findAnimeInJikan">Jikan</string>
+    <string name="findAnimeInMyList">My anime</string>
+
+    <!-- Detail Activity -->
+    <string name="title">Title</string>
+    <string name="watchlist">+ Watchlist</string>
+    <string name="progress">Progress:</string>
+    <string name="synopsis">Synopsis:</string>
+    <string name="synopsisContent">...</string>
+    <string name="defaultZero">0</string>
+    <string name="nbEpisode">/26</string>
+
+
+</resources>

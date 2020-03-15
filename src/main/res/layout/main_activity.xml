@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".mainActivity">
+
+    <LinearLayout
+        android:id="@+id/topFilterLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TableRow
+            android:id="@+id/SearchBarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/searchInput"
+                android:layout_width="146dp"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/searchText"
+                android:importantForAutofill="no"
+                android:inputType="textFilter" />
+
+            <Button
+                android:id="@+id/searchActionBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="requestDataToFillList"
+                android:text="@string/searchAction" />
+
+            <Button
+                android:id="@+id/criteriaBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/searchCriteria" />
+
+        </TableRow>
+
+        <RadioGroup
+            android:id="@+id/radioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkedButton="@+id/radioBtnAll"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <RadioButton
+                android:id="@+id/radioBtnAll"
+                android:layout_width="128dp"
+                android:layout_height="match_parent"
+                android:text="@string/radioAll" />
+
+            <RadioButton
+                android:id="@+id/radioBtnWatchlist"
+                android:layout_width="129dp"
+                android:layout_height="match_parent"
+                android:text="@string/radioWatchlist" />
+
+            <RadioButton
+                android:id="@+id/radioBtnCompleted"
+                android:layout_width="130dp"
+                android:layout_height="match_parent"
+                android:text="@string/radioCompleted" />
+
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/noResultLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/emptyResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="@string/emptyResult" />
+
+        <TextView
+            android:id="@+id/min3Char"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/min3Char" />
+
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/animeListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </LinearLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/colorPrimary">
+
+        <LinearLayout
+            android:id="@+id/bottomNavBarLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="clip_horizontal|center"
+            style="?android:attr/buttonBarStyle"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/jikanBtn"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:onClick="switchToJikanSearchLocation"
+                android:text="@string/findAnimeInJikan"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/myAnimeBtn"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:onClick="switchToMyListSearchLocation"
+                android:text="@string/findAnimeInMyList"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+    </com.google.android.material.bottomnavigation.BottomNavigationView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
