@@ -6,7 +6,6 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -18,7 +17,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -35,19 +33,17 @@ import com.warkiz.widget.SeekParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
+// Java class for the detailActivity, whose purpose is to display a given anime's data
 public class detailActivity extends AppCompatActivity {
-    private Anime anime;
-    private AnimeViewModel animeViewModel;
-    private ArrayList<String> bddListId;
+    private Anime anime;                    // Selected anime data holder
+    private AnimeViewModel animeViewModel;  // Access to database
+    private ArrayList<String> bddListId;    // List of the anime's ids in saved in database
 
+    // Permission to write to external storage (in our case, use to write in picture galleria)
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
     // Light/night theme variables:
@@ -57,6 +53,7 @@ public class detailActivity extends AppCompatActivity {
     int oldPrimaryTextColor;
     Boolean firstChange = true;
 
+    // Method to initialize all necessary components and data on activity creation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,7 +130,7 @@ public class detailActivity extends AppCompatActivity {
                 seekBar.setEnabled(false);
 
                 // Instantiating an anime with the extracted data (lastSeenEpisode and status are given default value)
-                anime = new Anime(id, strTitle, imageUrl, strSynopsis, intNbEpisode, 0, 1);
+                anime = new Anime(id, strTitle, imageUrl, strSynopsis, intNbEpisode, 0, Status.WATCHLIST);
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -173,16 +170,16 @@ public class detailActivity extends AppCompatActivity {
                 // If the new progress is equal to the last episode...
                 if( seekBar.getProgress() == seekBar.getMax() ){
                     // ... We update the status of the anime to completed ( = 2 )
-                    animeViewModel.updateStatus( 2, anime.getId() );
+                    animeViewModel.updateStatus( Status.COMPLETED, anime.getId() );
                     // and notify the user
                     Toast.makeText( getApplicationContext(), anime.getTitle() + " move to completed list", Toast.LENGTH_LONG).show();
                 }
                 // Else (if the new progress is inferior to the last episode
                 else{
                     // Else if the status was completed ( = 2 )...
-                    if( anime.getStatus() == 2 ){
+                    if( anime.getStatus() == Status.COMPLETED ){
                         // ... We change it to watching ( = 1 )
-                        animeViewModel.updateStatus( 1, anime.getId() );
+                        animeViewModel.updateStatus( Status.WATCHLIST, anime.getId() );
                         // and notify the user
                         Toast.makeText( getApplicationContext(), anime.getTitle() + " move to watching list", Toast.LENGTH_LONG).show();
                     }
@@ -199,23 +196,28 @@ public class detailActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
+        // ** LIGHT SENSOR **
         // https://stackoverflow.com/questions/17411562/android-light-sensor-detect-significant-light-changes
+
+        // Instantiating a new event listener for the light sensor:
         SensorEventListener lightSensorListener = new SensorEventListener(){
             @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {} // Not use
 
+            // Method to trigger actions on sensor change
             @Override
             public void onSensorChanged(SensorEvent event) {
+                // If the event comes from the light sensor ...
                 if(event.sensor.getType() == Sensor.TYPE_LIGHT){
+                    // ... If we get under an arbitrary threshold for "low luminosity" ...
                     if( previousLight > 20 && event.values[0] < 10 ){
+                        // ... We store the current value of the sensor and trigger theme swapping
                         previousLight = event.values[0];
                         swapTheme(0); // To dark theme
                     }
+                    // Else if we get over an arbitrary threshold for "low luminosity"
                     else if ( previousLight < 10 && event.values[0] > 20 ) {
+                        // ... Same logic
                         previousLight = event.values[0];
                         swapTheme(1); // To light theme
                     }
@@ -224,22 +226,23 @@ public class detailActivity extends AppCompatActivity {
             }
         };
 
+        // Retrieving the light sensor of the phone
         SensorManager mySensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         Sensor lightSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        // If successfully retrieve...
         if(lightSensor != null){
+            // ... we register the sensor to the manager
             Log.i("LightSensorDebug", "Sensor.TYPE_LIGHT Available");
             mySensorManager.registerListener(
                     lightSensorListener,
                     lightSensor,
                     SensorManager.SENSOR_DELAY_NORMAL);
-
-        } else {
+        }
+        // Else we notify unavailability via Log message
+        else {
             Log.i("LightSensorDebug", "Sensor.TYPE_LIGHT NOT Available");
         }
-
     }
-
-
 
     // Method to ask permission to save an image on your device
     public void askWriteToGallery(){

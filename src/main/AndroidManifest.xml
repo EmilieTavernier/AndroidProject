@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".detailActivity"></activity>
         <activity android:name=".mainActivity">
-            <intent-filter>ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.**WRITE**_EXTERNAL_STORAGE}, PERMISSION_REQUEST_EXTERNAL_STORAGE);
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />

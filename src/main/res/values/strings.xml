@@ -2,13 +2,14 @@
     <!-- Main Activity -->
     <string name="app_name">AnimeWatchList</string>
     <string name="searchText">Search</string>
-    <string name="searchAction">"\>"</string>
-    <string name="searchCriteria">Criteria</string>
+    <string name="searchAction">►</string>
+    <string name="searchCriteria">by name ↑</string>
     <string name="radioAll">All</string>
     <string name="radioWatchlist">Watchlist</string>
     <string name="radioCompleted">Completed</string>
     <string name="emptyResult">No result found</string>
     <string name="min3Char">Note: string inputs must have at least 3 characters</string>
+    <string name="typeList">Note: existing types are tv, ova, movie, special, ona and music</string>
 
     <string name="findAnimeInJikan">Jikan</string>
     <string name="findAnimeInMyList">My anime</string>
@@ -22,5 +23,13 @@
     <string name="defaultZero">0</string>
     <string name="nbEpisode">/26</string>
 
+    <!-- Search criteria fragment -->
+    <string name="radioName">name</string>
+    <string name="radioStudio">studio</string>
+    <string name="radioSeason">season</string>
+    <string name="radioGenre">genre</string>
+    <string name="radioRated">rated</string>
+    <string name="radioType">type</string>
+    <string name="searchBy">Search by:</string>
 
 </resources>

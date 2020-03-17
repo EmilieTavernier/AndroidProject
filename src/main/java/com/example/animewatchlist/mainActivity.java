@@ -2,21 +2,25 @@ package com.example.animewatchlist;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,38 +30,95 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static android.app.Activity.*;
+// Java class for the mainActivity, whose purpose is to display lists of anime based on search criteria
+public class mainActivity extends AppCompatActivity implements OnDataPass {
+    private Location searchLocation = Location.JIKAN; // Possible location: JIKAN (api) or MY_LIST (bdd)
+    private Criteria searchCriteria = Criteria.NAME;  // Possible criteria:
+    private int currentRadioButton = Status.ALL;      // Possible status: ALL, WATCHLIST or COMPLETED
+    private String currentCriteria = "by name";
 
-public class mainActivity extends AppCompatActivity {
-    private int searchLocation = 0; // 0 = JINKAN, 1 = MY_LIST
-    private int searchCriteria = 0; // 0 = NAME
-    private int currentRadioButton = 0; // 0 = ALL, 1 = WATCHLIST, 2 = COMPLETED
+    private JSONArray currentJsonArray;       // Holder for GET request to api result
+    private List<Anime> currentBddAnimeArray; // List of anime in bdd
+    private AnimeViewModel mAnimeViewModel;   // Access to database
+    private ArrayList<String> idList;         // List of ids of currently displayed anime
 
-    private JSONArray currentJsonArray;
-    private List<Anime> currentBddAnimeArray;
-    private AnimeViewModel mAnimeViewModel;
-    private ArrayList<String> idList;
+    FragmentManager fragmentManager;
+    SearchCriteriaSelectionFragment criteria_Frag;
+    Boolean frag_visible;
 
+    // Method to initialize all necessary components and data on activity creation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        // Prepare radio button event listenner
         addRadioButton_listener();
 
+        fragmentManager = this.getSupportFragmentManager();
+        criteria_Frag = new SearchCriteriaSelectionFragment();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragContainer, criteria_Frag);
+        fragmentTransaction.hide(criteria_Frag);
+        frag_visible = false;
+        fragmentTransaction.commit();
+
+        // Initialize access to database and retrieve the list of all anime
         mAnimeViewModel = new ViewModelProvider(this).get(AnimeViewModel.class);
         mAnimeViewModel.getAllAnimes().observe(this, new Observer<List<Anime>>() {
             @Override
             public void onChanged(@Nullable final List<Anime> animes) {
                 // Update the cached copy of the words in the adapter.
                 currentBddAnimeArray = mAnimeViewModel.getAllAnimes().getValue();
-                if( searchLocation == 1 ) updateMyAnimeListDisplay();
+                if( searchLocation == Location.MY_LIST ) updateMyAnimeListDisplay();
             }
         });
-
     }
 
+    public void criteriaBtnAction(View view){
+        updateCriteriaDisplay( true );
+    }
+
+    public void updateCriteriaDisplay( Boolean changeFragment ){
+        Button btn = findViewById(R.id.criteriaBtn);
+
+        if( !frag_visible ) {
+            String updateText = currentCriteria + " ↓";
+            btn.setText(updateText);
+            if( changeFragment ) {
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.show(criteria_Frag);
+                fragmentTransaction.commit();
+                frag_visible = true;
+            }
+        }
+        else {
+            String updateText = currentCriteria + " ↑";
+            btn.setText(updateText);
+            if( changeFragment ) {
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.hide(criteria_Frag);
+                fragmentTransaction.commit();
+                frag_visible = false;
+            }
+        }
+    }
+
+    @Override
+    public void onDataPass(String data) {
+        currentCriteria = "by " + data;
+
+        if( data.equalsIgnoreCase("name") )
+            searchCriteria = Criteria.NAME;
+        else if( data.equalsIgnoreCase("type") )
+            searchCriteria = Criteria.TYPE;
+
+        updateCriteriaDisplay( false );
+    }
+
+    // Method to update display when "Jikan" button is pressed
     public void switchToJikanSearchLocation(View view) throws JSONException {
-        searchLocation = 0;
+        searchLocation = Location.JIKAN;
 
         EditText searchInput = findViewById(R.id.searchInput);
         searchInput.getText().clear();
@@ -65,17 +126,40 @@ public class mainActivity extends AppCompatActivity {
         RadioGroup radioGroup = findViewById(R.id.radioGroup);
         radioGroup.setVisibility(view.GONE);
 
+        Button button = findViewById(R.id.criteriaBtn);
+        button.setEnabled(true);
+
         currentJsonArray = null;
         updateJikanAnimeListDisplay();
     }
 
+    // Method to update display when "My anime" button is pressed
     public void switchToMyListSearchLocation(View view) {
-        searchLocation = 1;
+        searchLocation = Location.MY_LIST;
         RadioGroup radioGroup = findViewById(R.id.radioGroup);
         radioGroup.setVisibility(view.VISIBLE);
 
+        Button button = findViewById(R.id.criteriaBtn);
+        button.setEnabled(false);
+
         EditText searchInput = findViewById(R.id.searchInput);
+        searchInput.setText("by name ↑");
         searchInput.getText().clear();
+
+        if( criteria_Frag != null && frag_visible ){
+            RadioButton rb_name = findViewById(R.id.radioName);
+            if(rb_name != null) rb_name.setChecked(true);
+            RadioButton rb_type = findViewById(R.id.radioType);
+            if(rb_type != null)rb_type.setChecked(false);
+
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.hide(criteria_Frag);
+            fragmentTransaction.commit();
+            frag_visible = false;
+
+            searchCriteria = Criteria.NAME;
+            currentCriteria = "by name";
+        }
 
         // TODO dynamic username
         currentBddAnimeArray = mAnimeViewModel.getAllAnimes().getValue();
@@ -83,14 +167,22 @@ public class mainActivity extends AppCompatActivity {
     }
 
     public void requestDataToFillList(View view) throws ExecutionException, InterruptedException, JSONException {
+        LinearLayout noResultLayout1 = findViewById(R.id.noResultLayout);
+        LinearLayout noResultLayout2 = findViewById(R.id.noResultLayoutTYPE);
+        noResultLayout1.setVisibility(View.GONE);
+        noResultLayout2.setVisibility(View.GONE);
+
         EditText searchInput = findViewById(R.id.searchInput);
 
-        if( searchLocation == 0 ) {
+        if( searchLocation == Location.JIKAN ) {
             String requestUrl = "";
             String requestFilter = "";
             String resultKey = "";
 
-            if( searchCriteria == 0 ) requestFilter = "?q=" + searchInput.getText().toString();
+            if( searchCriteria == Criteria.NAME )
+                requestFilter = "?q=" + searchInput.getText().toString();
+            else if ( searchCriteria == Criteria.TYPE )
+                requestFilter = "?type=" + searchInput.getText().toString();
 
             requestUrl = "https://api.jikan.moe/v3/search/anime" + requestFilter;
             Log.i("DebugURL", "URL: " + requestUrl);
@@ -98,14 +190,17 @@ public class mainActivity extends AppCompatActivity {
             resultKey = "results";
 
             JSONObject json = getRequest(requestUrl);
-            Log.i("DebugResult", "result: " + json.toString());
+            if( json == null )
+                Toast.makeText(getBaseContext(), "No internet connection", Toast.LENGTH_LONG).show();
 
-            currentJsonArray = json.optJSONArray(resultKey);
-            updateJikanAnimeListDisplay();
+            else {
+                //Log.i("DebugResult", "result: " + json.toString());
+
+                currentJsonArray = json.optJSONArray(resultKey);
+                updateJikanAnimeListDisplay();
+            }
         }
         else {
-            //requestUrl = getBaseURL_forRadioButton() + requestFilter;
-            //resultKey = "anime";
             currentBddAnimeArray = mAnimeViewModel.getAllAnimes().getValue();
             updateMyAnimeListDisplay();
         }
@@ -121,17 +216,19 @@ public class mainActivity extends AppCompatActivity {
         //Perform the doInBackground method, passing in our url
         result = getRequest.execute(requestUrl).get();
 
+        if( result == null ) return null;
         return new JSONObject(result);
     }
 
     public void updateJikanAnimeListDisplay() throws JSONException {
         // Retrieving the list...
         ListView list = findViewById(R.id.animeListView);
-        // ... and clear it with an empty array adapter
-        //ArrayAdapter<String> tableau = new ArrayAdapter<String>(list.getContext(), R.layout.my_text);
-        //ArrayAdapter<String> tableau = new ArrayAdapter<>( list.getContext(), R.layout.anime_card, R.id.animeTitleInList );
 
-        LinearLayout noResultLayout = findViewById(R.id.noResultLayout);
+        LinearLayout noResultLayout;
+        if ( searchCriteria == Criteria.NAME )
+            noResultLayout = findViewById(R.id.noResultLayout);
+        else
+            noResultLayout = findViewById(R.id.noResultLayoutTYPE);
 
         if( currentJsonArray != null && currentJsonArray.length() > 0 ) {
             noResultLayout.setVisibility(View.GONE);
@@ -189,11 +286,13 @@ public class mainActivity extends AppCompatActivity {
         // ... and clear it with an empty adapter
         list.setAdapter(null);
 
-        LinearLayout noResultLayout = findViewById(R.id.noResultLayout);
+        LinearLayout noResultLayout;
+        if ( searchCriteria == Criteria.NAME )
+            noResultLayout = findViewById(R.id.noResultLayout);
+        else
+            noResultLayout = findViewById(R.id.noResultLayoutTYPE);
 
         if( currentBddAnimeArray != null && currentBddAnimeArray.size() > 0 ) {
-            Log.i("updateAnime", "**********************************");
-
             noResultLayout.setVisibility(View.GONE);
 
             List<String> titles = new ArrayList<>();
@@ -202,7 +301,7 @@ public class mainActivity extends AppCompatActivity {
             for (int i = 0; i < currentBddAnimeArray.size(); i++) {
                 int status = currentBddAnimeArray.get(i).getStatus();
 
-                if( currentRadioButton == 0 || status == currentRadioButton ) {
+                if( currentRadioButton == Status.ALL || status == currentRadioButton ) {
                     String title = currentBddAnimeArray.get(i).getTitle();
                     String imageURL = currentBddAnimeArray.get(i).getImgURL();
                     String id = currentBddAnimeArray.get(i).getId();
@@ -216,7 +315,6 @@ public class mainActivity extends AppCompatActivity {
             String[] arr1 = new String[titles.size()];
             String[] arr2 = new String[titles.size()];
             animeListAdapter adaptater = new animeListAdapter(this, titles.toArray(arr1), imagesURLs.toArray(arr2));
-
             list.setAdapter(adaptater);
 
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -247,7 +345,7 @@ public class mainActivity extends AppCompatActivity {
         // ** Radio button ALL **
         View.OnClickListener radioBtnAll_listener = new View.OnClickListener (){
             public void onClick(View v) {
-                    currentRadioButton = 0;
+                    currentRadioButton = Status.ALL;
                     radioButtonRequestUpdate();
             }
         };
@@ -257,7 +355,7 @@ public class mainActivity extends AppCompatActivity {
         // ** Radio button WATCHLIST **
         View.OnClickListener radioBtnWatchlist_listener = new View.OnClickListener (){
             public void onClick(View v) {
-                currentRadioButton = 1;
+                currentRadioButton = Status.WATCHLIST;
                 radioButtonRequestUpdate();
             }
         };
@@ -267,7 +365,7 @@ public class mainActivity extends AppCompatActivity {
         // ** Radio button COMPLETED **
         View.OnClickListener radioBtnCompleted_listener = new View.OnClickListener (){
             public void onClick(View v) {
-                currentRadioButton = 2;
+                currentRadioButton = Status.COMPLETED;
                 radioButtonRequestUpdate();
             }
         };
@@ -278,10 +376,9 @@ public class mainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if( searchLocation == 1 ){
+        if( searchLocation == Location.MY_LIST ){
             currentBddAnimeArray = mAnimeViewModel.getAllAnimes().getValue();
             updateMyAnimeListDisplay();
         }
     }
-
 }

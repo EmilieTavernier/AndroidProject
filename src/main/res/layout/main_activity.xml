@@ -40,9 +40,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:onClick="criteriaBtnAction"
                 android:text="@string/searchCriteria" />
 
         </TableRow>
+
+        <TableRow
+            android:id="@+id/fragContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
         <RadioGroup
             android:id="@+id/radioGroup"
@@ -73,24 +79,51 @@
         </RadioGroup>
 
         <LinearLayout
+            android:id="@+id/noResultLayoutTYPE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="15dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/emptyResultTYPE"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/emptyResult" />
+
+            <TextView
+                android:id="@+id/listTYPE"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/typeList" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/noResultLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingTop="15dp"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/emptyResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text="@string/emptyResult" />
+            <TextView
+                android:id="@+id/emptyResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/emptyResult" />
 
-        <TextView
-            android:id="@+id/min3Char"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/min3Char" />
+            <TextView
+                android:id="@+id/min3Char"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/min3Char" />
 
         </LinearLayout>
 
